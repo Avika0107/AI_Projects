@@ -1,0 +1,70 @@
+import numpy as np
+import nltk
+import string
+import random
+
+f=open('chatbot.txt','r',errors='ignore')
+raw_doc=f.read()
+raw_doc=raw_doc.lower()
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('punkt_tab')
+sent_tok=nltk.sent_tokenize(raw_doc)
+word_tok=nltk.word_tokenize(raw_doc)
+	
+lemmer=nltk.stem.WordNetLemmatizer()
+def lemtoken(tokens):
+  return [lemmer.lemmatize(token) for token in tokens]
+remove_puct=dict((ord(punct),None) for punct in string.punctuation)
+def lemnormalise(text):
+  return lemtoken(nltk.word_tokenize(text.lower().taranslate(remove_puct))) 
+
+greet_input=("hello","hi","greeting","hey")
+greet_res=["hi","*nods*","hi there","hello"]
+def greet(sentence):
+  for word in sentence.split():
+		if word.lower() in greet_input:
+			return random.choice(greet_res)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+def response(user_res):
+	robo1_res=''
+	Tfidfvic = TfidfVictorize(tokenzer = lemnormalize,stop.word='english')
+	tfidf= Tfidf.fit_transfrom(sent_tok)
+	val=cosine_similarity(tfidf[-1],tfidf)
+	flat=vals.flatten()
+	flat.sort()
+	req_tfidf=flat[-2]
+	if (req_tfidf==0):
+		robo1_res=robo1_res+"i am sorry ! i don't understand you"
+		return robo1_res
+	else:
+		robo1_res=robo1_res + sent_tok[idk]
+		return robo1_res
+
+flag=True
+print("BOT: My name is bott ! how may i help you... if you want to exist type bye!"
+while (flag==True):
+	user_res=input()
+	user_res=user_res.lower()
+	if (user_res != bye):
+		if (user_res=='thanks' or user_res=='thank you'):
+			flag=False
+			print("BOT:  You're welcome")
+		else:
+			if (greet(user_res) != None):
+				print("BOT: "+greet(user_res))
+			else:
+				sent_tok.append(user_res)
+				word_tok=word_tok + nltk.word_tokenize(user_res)
+				final_word=list(set(word_tok))
+				print("BOT:",end="")
+				print(response(user_res))
+				sent_tok.remove(user_res)
+	else:
+		flag=False
+		print("BOT: GoodBye! Take Care..")
+	
+
