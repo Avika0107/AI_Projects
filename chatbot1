@@ -45,7 +45,7 @@ def response(user_res):
 		return robo1_res
 
 flag=True
-print("BOT: My name is bott ! how may i help you... if you want to exist type bye!"
+print("BOT: My name is bott ! how may i help you... if you want to exist type bye!")
 while (flag==True):
 	user_res=input()
 	user_res=user_res.lower()
