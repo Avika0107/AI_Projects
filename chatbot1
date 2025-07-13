@@ -31,7 +31,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 def response(user_res):
 	robo1_res=''
-	Tfidfvic = TfidfVictorize(tokenzer = lemnormalize,stop.word='english')
+	Tfidfvic = TfidfVictorize(tokenzer = lemnormalise,stop_word='english')
 	tfidf= Tfidf.fit_transfrom(sent_tok)
 	val=cosine_similarity(tfidf[-1],tfidf)
 	flat=vals.flatten()
