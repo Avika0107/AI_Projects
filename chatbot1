@@ -1,78 +1,78 @@
-import numpy as np
-import nltk
-import string
-import random
+# python-rule-based-chatbot.py
+import os # Import the os module to check for file existence
+import textwrap
+def get_bot_response(user_input):
+    """
+    Determines the chatbot's response based on predefined rules.
 
-try:
-    f = open('chatbot.txt', 'r', errors='ignore')
-    raw_doc = f.read()
-    raw_doc = raw_doc.lower()
-except FileNotFoundError:
-    print("Error: 'chatbot.txt' not found. Please ensure the file exists in the same directory.")
-    exit()
-except Exception as e:
-    print(f"An error occurred while reading the file: {e}")
-    exit()
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('punkt_tab')
-sent_tok=nltk.sent_tokenize(raw_doc)
-word_tok=nltk.word_tokenize(raw_doc)
+    Args:
+        user_input (str): The message entered by the user.
 
-lemmer=nltk.stem.WordNetLemmatizer()
-def lemtoken(tokens):
-  return [lemmer.lemmatize(token) for token in tokens]
-remove_puct=dict((ord(punct),None) for punct in string.punctuation)
-def lemnormalise(text):
-  return lemtoken(nltk.word_tokenize(text.lower().translate(remove_puct)))
+    Returns:
+        str: The chatbot's response.
+    """
+    # Convert the user input to lowercase for case-insensitive matching
+    lower_case_input = user_input.lower()
 
-greet_input=("hello","hi","greeting","hey")
-greet_res=["hi","*nods*","hi there","hello"]
-def greet(sentence):
-  for word in sentence.split():
-    if word.lower() in greet_input:
-      return random.choice(greet_res)
-
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
-def response(user_res):
-  robo1_res=''
-  Tfidfvic = TfidfVectorizer(tokenizer=lemnormalise , stop_words='english')
-  tfidf= Tfidfvic.fit_transform(sent_tok)
-  val=cosine_similarity(tfidf[-1],tfidf)
-  idk=val.argsort()[0][-2]
-  flat=val.flatten()
-  flat.sort()
-  req_tfidf=flat[-2]
-  if (req_tfidf==0):
-    robo1_res=robo1_res+"i am sorry ! i don't understand you"
-    return robo1_res
-  else:
-    robo1_res=robo1_res + sent_tok[idk]
-    return robo1_res
-
-flag=True
-print("BOT: My name is bott ! how may i help you... if you want to exist type bye!")
-while (flag==True):
-  user_res=input()
-  user_res=user_res.lower()
-  if (user_res != 'bye'):
-    if (user_res=='thanks' or user_res=='thank you'):
-      flag=False
-      print("BOT:  You're welcome")
+    # Rule 1: Greetings
+    if "hello" in lower_case_input or "hi" in lower_case_input:
+        return "Hi there! How can I help you today?"
+    # Rule 2: How are you?
+    elif "how are you" in lower_case_input:
+        return "I'm a computer program, so I don't have feelings, but I'm working perfectly! Thanks for asking."
+    # Rule 3: Asking for name
+    elif "your name" in lower_case_input:
+        return "I don't have a name. I'm just a simple chatbot!"
+    # Rule 4: Asking about capabilities
+    elif "what can you do" in lower_case_input or "help" in lower_case_input:
+        return "I can respond to basic questions based on keywords. Also i answer some questions about AI"
+    # Rule 5: Saying goodbye
+    elif "bye" in lower_case_input or "goodbye" in lower_case_input:
+        print( "Goodbye! Have a wonderful day!")
+    # Rule 6: Thank you
+    elif "thank you" in lower_case_input or "thanks" in lower_case_input:
+        return "You're most welcome!"
+    # Rule 7: Asking about age
+    elif "how old are you" in lower_case_input or "your age" in lower_case_input:
+        return "I don't have an age, I'm just a program!"
+    # Rule 8: Favorite color
+    elif "favorite color" in lower_case_input:
+        return "I don't have a favorite color, but I think all colors are cool!"
+    # Rule 9: Tell me about AI / What is AI
+    elif 'tell me about ai' in lower_case_input or 'what is ai' in lower_case_input:
+        # Define the path to your chatbot.txt file
+        file_path = 'chatbot.txt'
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, 'r', errors='ignore') as f:
+                    raw_doc = f.read()
+                    wrapped_text = textwrap.fill(raw_doc, width=70)
+                    return wrapped_text
+                return raw_doc # Return the content of the file
+            except Exception as e:
+                return f"Sorry, I had trouble reading the AI information: {e}"
+        else:
+            return "I don't have information about AI right now. Please make sure 'chatbot.txt' exists in the same directory."
+    # Default response if no rule matches
     else:
-      greeting_response = greet(user_res)
-      if (greet(user_res) != None):
-        print("BOT: "+greet(user_res))
-      else:
-        sent_tok.append(user_res)
-        word_tok=word_tok + nltk.word_tokenize(user_res)
-        final_word=list(set(word_tok))
-        print("BOT:",end="")
-        print(response(user_res))
-        sent_tok.remove(user_res)
-  else:
-    flag=False
-    print("BOT: GoodBye! Take Care..")
+        return "Hmm, I'm not sure I understand. Could you try asking something else?"
 
+def start_chatbot():
+    """
+    Starts the chatbot conversation loop.
+    """
+    print("Hello! I'm a simple chatbot. Type 'exit' to end our chat.") # Re-added initial greeting
+
+    while True:
+        user_message = input("You: ") # Get input from the user
+
+        if user_message.lower() == 'exit':
+            print("Chatbot: It was nice chatting with you! Goodbye!")
+            break # Exit the loop if user types 'exit'
+        else:
+            bot_response = get_bot_response(user_message) # Get bot's response
+            print(f"Chatbot: {bot_response}") # Print the bot's response
+
+# Start the chatbot when the script is run
+if __name__ == "__main__":
+    start_chatbot()
