@@ -1,0 +1,135 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import re # For cleaning text
+
+def create_movie_data():
+    data = {
+        'Movie_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'Title': [
+            'The Space Odyssey', 'Robot Uprising', 'Fantasy Quest', 'Detective Story',
+            'Alien Invasion', 'Medieval Kingdom', 'Future City', 'Mystery Island',
+            'Dragon Slayer', 'Romantic Comedy'
+        ],
+        'Genre': [
+            'Sci-Fi, Adventure', 'Sci-Fi, Action', 'Fantasy, Adventure', 'Mystery, Thriller',
+            'Sci-Fi, Horror', 'Fantasy, Drama', 'Sci-Fi, Action', 'Mystery, Adventure',
+            'Fantasy, Action', 'Comedy, Romance'
+        ],
+        'Keywords': [
+            'space, alien, exploration, future',
+            'robots, AI, rebellion, future, action',
+            'magic, quest, dragons, medieval',
+            'crime, investigation, suspense, city',
+            'alien, invasion, survival, horror',
+            'knights, castles, war, medieval',
+            'cyberpunk, technology, future, action',
+            'puzzle, secrets, investigation, tropical',
+            'dragons, sword, magic, quest',
+            'love, humor, city, relationship'
+        ]
+    }
+    df = pd.DataFrame(data)
+    # Combine relevant text features into a single string for easier comparison
+    df['Combined_Features'] = df['Genre'] + ", " + df['Keywords']
+    # Convert to lowercase and remove extra spaces for consistent matching
+    df['Combined_Features'] = df['Combined_Features'].apply(lambda x: re.sub(r'\s+', ' ', x.lower().replace(',', ' ')).strip())
+    return df
+
+def get_user_preferences():
+    """Asks the user for preferred keywords."""
+    print("\n--- Enter Your Movie Preferences ---")
+    print("Tell us some keywords you like (e.g., action, sci-fi, magic, space, mystery).")
+    print("Separate multiple keywords with commas.")
+    user_input = input("Your preferred keywords: ")
+    # Clean and split user input into a list of keywords
+    user_keywords = [re.sub(r'\s+', '', k).lower() for k in user_input.split(',') if k.strip()]
+    return user_keywords
+
+def calculate_similarity(movies_df, user_keywords):
+   
+    if not user_keywords:
+        return pd.Series(0, index=movies_df.index) # Return all zeros if no keywords
+
+    similarity_scores = []
+    for index, row in movies_df.iterrows():
+        score = 0
+        movie_features = set(row['Combined_Features'].split()) # Convert to set for faster lookup
+        for keyword in user_keywords:
+            if keyword in movie_features:
+                score += 1
+        similarity_scores.append(score)
+    return pd.Series(similarity_scores, index=movies_df.index)
+
+def recommend_movies(movies_df, user_keywords, num_recommendations=3):
+    """
+    Recommends movies based on similarity to user preferences.
+    """
+    print("\n--- Generating Recommendations ---")
+    similarity_scores = calculate_similarity(movies_df, user_keywords)
+
+    if similarity_scores.sum() == 0 and user_keywords:
+        print("No movies found matching your keywords. Try different keywords!")
+        # Fallback: Recommend top-rated (e.g., by ID for this simple case)
+        print("Here are some popular movies instead:")
+        return movies_df.sample(min(num_recommendations, len(movies_df))) # Random sample
+
+    # Add similarity scores to the DataFrame
+    movies_df['Similarity_Score'] = similarity_scores
+
+    # Sort by similarity score in descending order
+    recommended_df = movies_df.sort_values(by='Similarity_Score', ascending=False)
+
+    # Filter out movies with zero similarity if user provided keywords
+    if user_keywords:
+        recommended_df = recommended_df[recommended_df['Similarity_Score'] > 0]
+
+    # Get top N recommendations
+    top_recommendations = recommended_df.head(num_recommendations)
+
+    if top_recommendations.empty:
+        print("No movies found matching your keywords. Try different keywords!")
+        print("Here are some popular movies instead:")
+        return movies_df.sample(min(num_recommendations, len(movies_df))) # Random sample
+
+    return top_recommendations
+
+def visualize_recommendations(recommended_df):
+    """Visualizes the similarity scores of recommended movies."""
+    if recommended_df.empty:
+        print("No recommendations to visualize.")
+        return
+
+    plt.style.use('seaborn-v0_8-darkgrid') # Modern plot style
+    plt.figure(figsize=(10, 6))
+
+    # Create a bar chart of similarity scores
+    plt.barh(recommended_df['Title'], recommended_df['Similarity_Score'], color='skyblue')
+    plt.xlabel('Similarity Score (Keyword Match Count)')
+    plt.ylabel('Movie Title')
+    plt.title('Top Recommended Movies by Similarity Score')
+    plt.xlim(0, recommended_df['Similarity_Score'].max() * 1.2) # Extend x-axis slightly
+    plt.gca().invert_yaxis() # Put highest score at the top
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    # 1. Create our movie dataset
+    movies_df = create_movie_data()
+    print("\n--- Available Movies ---")
+    print(movies_df[['Title', 'Genre', 'Keywords']].to_string()) # Display all movies
+
+    # 2. Get user preferences
+    user_keywords = get_user_preferences()
+
+    # 3. Get recommendations
+    top_recommendations = recommend_movies(movies_df.copy(), user_keywords, num_recommendations=5) # Use a copy to avoid modifying original df
+
+    # 4. Display recommendations
+    if not top_recommendations.empty:
+        print("\n--- Your Top Movie Recommendations ---")
+        print(top_recommendations[['Title', 'Genre', 'Keywords', 'Similarity_Score']].to_string(index=False))
+        # 5. Visualize recommendations
+        visualize_recommendations(top_recommendations)
+    else:
+        print("\nCould not generate recommendations based on your input.")
